@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: pokeapidb
+spec:
+  serviceName: "pokeapidb"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pokeapidb
+  template:
+    metadata:
+      labels:
+        app: pokeapidb
+    spec:
+      containers:
+      - name: pokeapidb
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        ports:
+        - containerPort: 1433
+        env:
+        - name: SA_PASSWORD
+          value: "Sw12345678"
+        - name: ACCEPT_EULA
+          value: "Y"
+        volumeMounts:
+        - name: mssql-data
+          mountPath: /var/opt/mssql
+  volumeClaimTemplates:
+  - metadata:
+      name: mssql-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pokeapidb
+spec:
+  selector:
+    app: pokeapidb
+  ports:
+    - protocol: TCP
+      port: 1433
+      targetPort: 1433
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pokeapiapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pokeapiapp
+  template:
+    metadata:
+      labels:
+        app: pokeapiapp
+    spec:
+      containers:
+      - name: pokeapiapp
+        image: juanmoris/docker-app:tag
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ConnectionStrings__Database
+          value: "Server=pokeapidb;Database=PokeApiDb;User Id=sa;Password=Sw12345678;Encrypt=False;TrustServerCertificate=True;"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pokeapiapp-service
+spec:
+  type: NodePort
+  selector:
+    app: pokeapiapp
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 8080
