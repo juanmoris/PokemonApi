@@ -1,4 +1,5 @@
-﻿using PokemonApi.Application.Interfaces;
+﻿using PokemonApi.Application.Dtos;
+using PokemonApi.Application.Interfaces;
 using PokemonApi.Domain.Entities;
 using System.Text.Json;
 
@@ -31,11 +32,4 @@ public class PokeApiService : IPokeApiService
             Weight = data.Weight
         };
     }
-}
-
-public class PokeApiDto
-{
-    public string Name { get; set; } = string.Empty;
-    public int Height { get; set; }
-    public int Weight { get; set; }
 }
